@@ -95,6 +95,12 @@ def kamis_unit(row):
     return f"{size}{unit}"
 
 
+def kamis_kind(row):
+    name = str(row.get("item_nm") or "").strip()
+    kind = str(row.get("vrty_nm") or "").strip()
+    return "" if kind == name else kind
+
+
 def kamis_convert(rows):
     """소매 가격만, 최근 조사분만, 같은 품목·품종은 '상품' 등급 하나만 남깁니다."""
     dated = []
@@ -117,9 +123,7 @@ def kamis_convert(rows):
         name = str(r.get("item_nm") or "").strip()
         if not price or not name:
             continue
-        kind = str(r.get("vrty_nm") or "").strip()
-        if kind == name:
-            kind = ""
+        kind = kamis_kind(r)
         rank = str(r.get("grd_nm") or "").strip()
         entry = {
             "name": name,
@@ -326,7 +330,7 @@ def fetch_chamgagyeok(today, fixture):
 
 # ---------------------------------------------------------------- 변동 이력
 
-HISTORY_DAYS = 100  # 그래프는 최근 3개월을 보여 주므로 조금 넉넉히 둡니다.
+HISTORY_DAYS = 92  # 최근 3개월만 두고, 그보다 오래된 값은 지웁니다.
 
 
 def item_key(i):
@@ -348,14 +352,202 @@ def add_history(items, old_items):
         if date and i.get("price"):
             hist = [h for h in hist if h[0] != date] + [[date, i["price"]]]
         hist.sort(key=lambda h: h[0])
-        if date:
-            cutoff = (dt.date.fromisoformat(date) - dt.timedelta(days=HISTORY_DAYS)).isoformat()
-            hist = [h for h in hist if h[0] >= cutoff]
         if hist:
             i["history"] = hist
+    trim_history(items)
+
+
+def trim_history(items):
+    """품목 조사일 기준 3개월(HISTORY_DAYS)이 지난 값은 지웁니다."""
+    for i in items:
+        hist = i.get("history")
+        if not hist or not i.get("date"):
+            continue
+        cutoff = (dt.date.fromisoformat(i["date"]) - dt.timedelta(days=HISTORY_DAYS)).isoformat()
+        i["history"] = [h for h in hist if h[0] >= cutoff]
+        if not i["history"]:
+            del i["history"]
+
+
+# ---------------------------------------------------------------- 지난 시세 채우기
+
+# 공공데이터포털 "한국농수산식품유통공사_가격 추이 정보 조회" (data.go.kr/data/15156069)
+# 조사일 하나를 넣으면 그날과 1~4주 전 평균 가격을 함께 줍니다.
+KAMIS_TREND_API = "https://apis.data.go.kr/B552845/priceSequel/info"
+TREND_FIELDS = (
+    (0, "exmn_dd_avg_prc"),
+    (7, "ww1_bfr_avg_prc"),
+    (14, "ww2_bfr_avg_prc"),
+    (21, "ww3_bfr_avg_prc"),
+    (28, "ww4_bfr_avg_prc"),
+)
+
+
+def merge_points(items, points, near_days=0):
+    """points: {item_key: [[날짜, 가격], ...]} 를 각 품목 history 에 더합니다.
+
+    이미 있는 날짜는 그대로 둡니다. [near_days]가 있으면 새 점과 그 일수 안으로
+    가까운 기존 점(1주·1달 전 값으로 대신 채워 둔 점)은 새 점으로 바꿉니다.
+    """
+    added = 0
+    for i in items:
+        new = points.get(item_key(i))
+        if not new:
+            continue
+        hist = [list(h) for h in i.get("history") or []]
+        if near_days:
+            new_days = [dt.date.fromisoformat(d) for d, _ in new]
+            hist = [
+                h
+                for h in hist
+                if h[0] == i.get("date")
+                or all(abs((dt.date.fromisoformat(h[0]) - nd).days) > near_days for nd in new_days)
+            ]
+        have = {h[0] for h in hist}
+        for d, v in new:
+            if d not in have:
+                hist.append([d, v])
+                have.add(d)
+                added += 1
+        hist.sort(key=lambda h: h[0])
+        i["history"] = hist
+    return added
+
+
+def backfill_kamis(items, key, fixture):
+    """가격 추이 API로 KAMIS 품목의 지난 주별 가격을 채웁니다. 몇 번만 부르면 됩니다."""
+    kamis = [i for i in items if i.get("source") == "KAMIS" and i.get("date")]
+    if not kamis:
+        return 0
+    newest = max(dt.date.fromisoformat(i["date"]) for i in kamis)
+    points = {}
+    # 한 번에 5주치(그날 + 1~4주 전)가 오므로 5주 간격으로 세 번 부르면 약 3개월입니다.
+    for back in (0, 35, 70):
+        day = newest - dt.timedelta(days=back)
+        try:
+            if fixture:
+                path = os.path.join(fixture, "kamis", "trend.json")
+                payload = json.load(open(path, encoding="utf-8"))
+            else:
+                payload = json.loads(
+                    get(
+                        KAMIS_TREND_API,
+                        {
+                            "serviceKey": key,
+                            "pageNo": "1",
+                            "numOfRows": "1000",
+                            "returnType": "JSON",
+                            "cond[exmn_ymd::EQ]": day.strftime("%Y%m%d"),
+                            "cond[se_cd::EQ]": KAMIS_RETAIL,
+                        },
+                    )
+                )
+        except Exception as e:
+            print(f"KAMIS 추이 {day} 받기 실패: {e}", file=sys.stderr)
+            continue
+        rows = kamis_rows(payload)
+        if rows and back == 0:
+            print("KAMIS 추이 항목:", ", ".join(sorted(rows[0].keys())))
+        for r in rows:
+            if str(r.get("se_cd") or KAMIS_RETAIL) != KAMIS_RETAIL:
+                continue
+            name = str(r.get("item_nm") or "").strip()
+            k = ("KAMIS", name, kamis_kind(r), kamis_unit(r))
+            for days, field in TREND_FIELDS:
+                v = number(r.get(field))
+                if v:
+                    d = (day - dt.timedelta(days=days)).isoformat()
+                    points.setdefault(k, []).append([d, v])
+        if fixture:
+            break
+    n = merge_points(items, points, near_days=3)
+    print(f"KAMIS 지난 시세: {n}개 점 추가")
+    return n
+
+
+def backfill_chamgagyeok(items, key, today, fixture, max_days):
+    """참가격 지난 조사일 가격을 하루 한도(2,000건) 안에서 [max_days]회차씩 채웁니다."""
+    cham = [i for i in items if i.get("source") == "참가격"]
+    if not cham or max_days <= 0:
+        return 0
+    have = {}
+    for i in cham:
+        for d, _ in i.get("history") or []:
+            have[d] = have.get(d, 0) + 1
+    # 품목 절반 넘게 들어 있는 날짜는 이미 채운 회차로 봅니다.
+    done = {d for d, n in have.items() if n * 2 >= len(cham)}
+    cutoff = today - dt.timedelta(days=HISTORY_DAYS)
+    fridays = [d for d in recent_weekdays(today, weekday=4, count=14) if d >= cutoff]
+    todo = [f for f in fridays if f.isoformat() not in done]
+    if not todo:
+        print("참가격 지난 시세: 이미 다 채웠어요.")
+        return 0
+
+    def call(svc, params):
+        if fixture:
+            name = "getProductInfoSvc.xml" if "Info" in svc and "Price" not in svc else "getProductPriceInfoSvc.xml"
+            return open(os.path.join(fixture, "chamgagyeok", name), encoding="utf-8").read()
+        return get(f"{PRICE_GO_KR}/{svc}", params)
+
+    products = [p for p in xml_records(call("getProductInfoSvc.do", {"ServiceKey": key})) if is_food(p)]
+    if not products:
+        return 0
+    probe = products[0]["goodId"]
+    added = 0
+    filled = 0
+    for day in todo:
+        if filled >= max_days:
+            break
+        params = {"serviceKey": key, "goodInspectDay": day.strftime("%Y%m%d")}
+        if not fixture and not xml_records(call("getProductPriceInfoSvc", {**params, "goodId": probe})):
+            continue  # 조사가 없던 금요일 (격주)
+        prices = []
+        if fixture:
+            prices = xml_records(call("getProductPriceInfoSvc", params))
+        else:
+            for prod in products:
+                try:
+                    prices += xml_records(call("getProductPriceInfoSvc", {**params, "goodId": prod["goodId"]}))
+                except Exception as e:
+                    print(f"참가격 {day} {prod.get('goodName')} 실패: {e}", file=sys.stderr)
+        past = chamgagyeok_convert(products, prices, day)
+        points = {item_key(i): [[i["date"], i["price"]]] for i in past}
+        n = merge_points(items, points)
+        print(f"참가격 지난 시세: {day} 조사분 {n}개 점 추가")
+        added += n
+        filled += 1
+    return added
+
+
+def backfill(path, today, fixture, max_cham_days):
+    try:
+        data = json.load(open(path, encoding="utf-8"))
+    except (OSError, ValueError):
+        print("시세 파일이 없어 채울 수 없습니다.", file=sys.stderr)
+        return 1
+    key = os.environ.get("DATA_GO_KR_KEY", "")
+    if not fixture and not key:
+        print("키가 없어 건너뜁니다.")
+        return 0
+    items = data.get("items", [])
+    added = backfill_kamis(items, key, fixture)
+    added += backfill_chamgagyeok(items, key, today, fixture, max_cham_days)
+    trim_history(items)
+    if not added:
+        print("새로 채운 값이 없어 파일을 바꾸지 않습니다.")
+        return 0
+    write(path, data)
+    print(f"저장: 지난 시세 {added}개 점 추가 → {path}")
+    return 0
 
 
 # ---------------------------------------------------------------- 저장
+
+
+def write(path, data):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=1)
+        f.write("\n")
 
 
 def main():
@@ -363,8 +555,16 @@ def main():
     ap.add_argument("--fixture", help="실제 API 대신 읽을 예시 응답 폴더")
     ap.add_argument("--out", default=OUT)
     ap.add_argument("--today", help="기준일 YYYY-MM-DD (시험용)")
+    ap.add_argument(
+        "--backfill",
+        type=int,
+        metavar="N",
+        help="새로 받지 않고, 지난 3개월 시세를 채웁니다 (참가격은 한 번에 N회차까지)",
+    )
     args = ap.parse_args()
     today = dt.date.fromisoformat(args.today) if args.today else dt.date.today()
+    if args.backfill is not None:
+        return backfill(args.out, today, args.fixture, args.backfill)
 
     try:
         old = json.load(open(args.out, encoding="utf-8"))
@@ -392,9 +592,7 @@ def main():
         "date": dates[-1] if dates else None,
         "items": items,
     }
-    with open(args.out, "w", encoding="utf-8") as f:
-        json.dump(out, f, ensure_ascii=False, indent=1)
-        f.write("\n")
+    write(args.out, out)
     print(f"저장: 시세 {len(items)}개 → {args.out}")
     return 0
 

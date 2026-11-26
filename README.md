@@ -5,6 +5,7 @@
 
 - 매주 화요일 오전 10시(한국 시간)에 `.github/workflows/prices.yml`이 `tool/fetch_prices.py`를 실행해 `prices.json`을 갱신해요. Actions 탭에서 Run workflow로 바로 실행할 수도 있어요.
 - 품목마다 `history`(최근 약 3개월의 [날짜, 가격])와, KAMIS는 `w1`·`m1`·`y1`(1주·1달·1년 전 가격)도 들어 있어요.
+- 매일 새벽 3시에는 `.github/workflows/backfill.yml`이 그래프용 지난 시세(최근 3개월)를 채워요. 다 채우면 아무것도 바꾸지 않아요. 3개월(92일)이 지난 값은 지워요.
 - 앱은 `https://raw.githubusercontent.com/joonofgod/palado-dwae-data/main/prices.json`을 받아요.
 
 | 출처 | 무엇 |

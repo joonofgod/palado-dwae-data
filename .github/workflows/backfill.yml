@@ -1,0 +1,39 @@
+name: 지난 시세 채우기
+
+# 그래프용으로 최근 3개월 시세를 채웁니다. 매일 새벽 3시(한국 시간)에 돌고,
+# 다 채워지면 아무것도 바꾸지 않습니다.
+# - KAMIS: "가격 추이 정보 조회" API로 주별 평균 (몇 번만 부름)
+# - 참가격: 지난 조사일(격주 금요일)을 하루 2회차씩 (하루 한도 2,000건 안에서)
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prices
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 지난 시세 받기
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+        run: python3 tool/fetch_prices.py --backfill 2
+      - name: 바뀌었으면 커밋
+        run: |
+          if git diff --quiet prices.json; then
+            echo "바뀐 시세 없음"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add prices.json
+          git commit -m "지난 시세 채우기 ($(date -u +%Y-%m-%d))"
+          git pull --rebase
+          git push

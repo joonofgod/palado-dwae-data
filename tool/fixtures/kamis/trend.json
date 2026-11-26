@@ -1,0 +1,3 @@
+{"response": {"header": {"resultCode": "0", "resultMsg": "정상"}, "body": {"items": {"item": [
+ {"exmn_ymd": "20261125", "se_cd": "01", "item_nm": "양파", "vrty_nm": "양파", "grd_nm": "상품", "unit": "kg", "unit_sz": "1", "exmn_dd_avg_prc": "1864", "ww1_bfr_avg_prc": "1901", "ww2_bfr_avg_prc": "1950", "ww3_bfr_avg_prc": "2010", "ww4_bfr_avg_prc": "2050"}
+]}}}}
