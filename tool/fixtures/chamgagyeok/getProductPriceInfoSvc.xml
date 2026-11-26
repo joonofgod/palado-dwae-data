@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 시험용 예시 응답 (형식 확인용, 실제 가격 아님) -->
+<response><result>
+ <iros.openapi.service.vo.goodPriceVO><goodInspectDay>20261120</goodInspectDay><entpId>10</entpId><goodId>1</goodId><goodPrice>2380</goodPrice></iros.openapi.service.vo.goodPriceVO>
+ <iros.openapi.service.vo.goodPriceVO><goodInspectDay>20261120</goodInspectDay><entpId>11</entpId><goodId>1</goodId><goodPrice>2500</goodPrice></iros.openapi.service.vo.goodPriceVO>
+ <iros.openapi.service.vo.goodPriceVO><goodInspectDay>20261120</goodInspectDay><entpId>12</entpId><goodId>1</goodId><goodPrice>1990</goodPrice><plusoneYn>Y</plusoneYn></iros.openapi.service.vo.goodPriceVO>
+ <iros.openapi.service.vo.goodPriceVO><goodInspectDay>20261120</goodInspectDay><entpId>10</entpId><goodId>2</goodId><goodPrice>8900</goodPrice></iros.openapi.service.vo.goodPriceVO>
+ <iros.openapi.service.vo.goodPriceVO><goodInspectDay>20261120</goodInspectDay><entpId>10</entpId><goodId>3</goodId><goodPrice>7450</goodPrice></iros.openapi.service.vo.goodPriceVO>
+ <iros.openapi.service.vo.goodPriceVO><goodInspectDay>20261120</goodInspectDay><entpId>10</entpId><goodId>4</goodId><goodPrice>5000</goodPrice></iros.openapi.service.vo.goodPriceVO>
+</result></response>

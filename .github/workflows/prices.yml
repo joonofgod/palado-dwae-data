@@ -1,0 +1,35 @@
+name: 재료 시세 갱신
+
+# 매주 화요일 오전 10시(한국 시간)에 KAMIS(농·수산물)와 참가격(식품) 시세를 받아
+# prices.json을 갱신합니다.
+# 앱은 이 파일을 받아 쓰므로 앱에 API 키가 들어가지 않습니다.
+# 두 출처 모두 공공데이터포털 키 하나(저장소 Secret DATA_GO_KR_KEY)로 받습니다.
+# 받기에 실패한 출처는 지난 값을 그대로 둡니다.
+on:
+  schedule:
+    - cron: "0 1 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 시세 받기 (KAMIS·참가격)
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+        run: python3 tool/fetch_prices.py
+      - name: 바뀌었으면 커밋
+        run: |
+          if git diff --quiet prices.json; then
+            echo "바뀐 시세 없음"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add prices.json
+          git commit -m "재료 시세 갱신 ($(date -u +%Y-%m-%d))"
+          git push

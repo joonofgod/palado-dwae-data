@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 시험용 예시 응답 (형식 확인용, 실제 가격 아님) -->
+<response>
+<result>
+ <item><goodId>1</goodId><goodName>백설 하얀설탕 1kg</goodName><goodTotalCnt>1000</goodTotalCnt><goodTotalDivCode>G</goodTotalDivCode><goodSmlclsCode>030204007</goodSmlclsCode></item>
+ <item><goodId>2</goodId><goodName>해표 식용유 1.8L</goodName><goodTotalCnt>1800</goodTotalCnt><goodTotalDivCode>ML</goodTotalDivCode><goodSmlclsCode>030204005</goodSmlclsCode></item>
+ <item><goodId>3</goodId><goodName>샘표 양조간장 501S 930ml</goodName><goodTotalCnt>930</goodTotalCnt><goodTotalDivCode>ML</goodTotalDivCode><goodSmlclsCode>030204001</goodSmlclsCode></item>
+ <item><goodId>4</goodId><goodName>생활용품 (빠져야 함)</goodName><goodTotalCnt>1</goodTotalCnt><goodTotalDivCode>EA</goodTotalDivCode><goodSmlclsCode>030301006</goodSmlclsCode></item>
+</result>
+<resultCode>00</resultCode><resultMsg>ok</resultMsg></response>
