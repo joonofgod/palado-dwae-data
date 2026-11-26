@@ -25,6 +25,7 @@ import statistics
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -41,6 +42,11 @@ def get(url, params, tries=3):
         try:
             with urllib.request.urlopen(req, timeout=60) as res:
                 return res.read().decode("utf-8")
+        except urllib.error.HTTPError as e:
+            # 하루 호출 한도를 넘긴 것: 다시 해도 소용없으니 바로 알립니다.
+            if e.code == 429 or attempt == tries - 1:
+                raise
+            time.sleep(2 * (attempt + 1))
         except Exception:
             if attempt == tries - 1:
                 raise
@@ -489,7 +495,11 @@ def backfill_chamgagyeok(items, key, today, fixture, max_days):
             return open(os.path.join(fixture, "chamgagyeok", name), encoding="utf-8").read()
         return get(f"{PRICE_GO_KR}/{svc}", params)
 
-    products = [p for p in xml_records(call("getProductInfoSvc.do", {"ServiceKey": key})) if is_food(p)]
+    try:
+        products = [p for p in xml_records(call("getProductInfoSvc.do", {"ServiceKey": key})) if is_food(p)]
+    except Exception as e:
+        print(f"참가격 상품 목록 받기 실패: {e}", file=sys.stderr)
+        return 0
     if not products:
         return 0
     probe = products[0]["goodId"]
@@ -499,23 +509,40 @@ def backfill_chamgagyeok(items, key, today, fixture, max_days):
         if filled >= max_days:
             break
         params = {"serviceKey": key, "goodInspectDay": day.strftime("%Y%m%d")}
-        if not fixture and not xml_records(call("getProductPriceInfoSvc", {**params, "goodId": probe})):
-            continue  # 조사가 없던 금요일 (격주)
         prices = []
-        if fixture:
-            prices = xml_records(call("getProductPriceInfoSvc", params))
-        else:
-            for prod in products:
-                try:
-                    prices += xml_records(call("getProductPriceInfoSvc", {**params, "goodId": prod["goodId"]}))
-                except Exception as e:
-                    print(f"참가격 {day} {prod.get('goodName')} 실패: {e}", file=sys.stderr)
-        past = chamgagyeok_convert(products, prices, day)
-        points = {item_key(i): [[i["date"], i["price"]]] for i in past}
-        n = merge_points(items, points)
-        print(f"참가격 지난 시세: {day} 조사분 {n}개 점 추가")
-        added += n
+        stop = False
+        try:
+            if not fixture and not xml_records(call("getProductPriceInfoSvc", {**params, "goodId": probe})):
+                continue  # 조사가 없던 금요일 (격주)
+            if fixture:
+                prices = xml_records(call("getProductPriceInfoSvc", params))
+            else:
+                for prod in products:
+                    try:
+                        prices += xml_records(call("getProductPriceInfoSvc", {**params, "goodId": prod["goodId"]}))
+                    except urllib.error.HTTPError as e:
+                        if e.code == 429:
+                            raise
+                        print(f"참가격 {day} {prod.get('goodName')} 실패: {e}", file=sys.stderr)
+                    except Exception as e:
+                        print(f"참가격 {day} {prod.get('goodName')} 실패: {e}", file=sys.stderr)
+        except urllib.error.HTTPError as e:
+            if e.code != 429:
+                raise
+            print("참가격 오늘 호출 한도를 다 써서 여기까지 하고 내일 이어서 받아요.")
+            stop = True
+        except Exception as e:
+            print(f"참가격 {day} 받기 실패: {e}", file=sys.stderr)
+            continue
+        if prices:
+            past = chamgagyeok_convert(products, prices, day)
+            points = {item_key(i): [[i["date"], i["price"]]] for i in past}
+            n = merge_points(items, points)
+            print(f"참가격 지난 시세: {day} 조사분 {n}개 점 추가")
+            added += n
         filled += 1
+        if stop:
+            break
     return added
 
 
