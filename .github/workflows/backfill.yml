@@ -6,7 +6,7 @@ name: 지난 시세 채우기
 # - 참가격: 지난 조사일(격주 금요일)을 하루 2회차씩 (하루 한도 2,000건 안에서)
 on:
   schedule:
-    - cron: "0 18 * * *"
+    - cron: "17 18 * * *"  # 정각은 GitHub가 자주 건너뛰어서 17분
   workflow_dispatch:
 
 permissions:
