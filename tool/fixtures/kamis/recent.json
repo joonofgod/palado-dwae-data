@@ -1,9 +1,143 @@
-{"response": {"header": {"resultCode": "0", "resultMsg": "정상"}, "body": {"dataType": "JSON", "numOfRows": 1000, "pageNo": 1, "totalCount": 7, "items": {"item": [
- {"exmn_ymd": "20261125", "se_cd": "01", "se_nm": "소매", "ctgry_cd": "200", "ctgry_nm": "채소류", "item_cd": "245", "item_nm": "양파", "vrty_cd": "00", "vrty_nm": "양파", "grd_cd": "04", "grd_nm": "상품", "unit": "kg", "unit_sz": "1", "exmn_dd_prc": "1864", "exmn_dd_cnvs_prc": "1864"},
- {"exmn_ymd": "20261125", "se_cd": "01", "se_nm": "소매", "ctgry_cd": "200", "ctgry_nm": "채소류", "item_cd": "211", "item_nm": "배추", "vrty_cd": "03", "vrty_nm": "가을", "grd_cd": "04", "grd_nm": "상품", "unit": "포기", "unit_sz": "1", "exmn_dd_prc": "2408", "exmn_dd_cnvs_prc": "2408"},
- {"exmn_ymd": "20261125", "se_cd": "01", "se_nm": "소매", "ctgry_cd": "100", "ctgry_nm": "식량작물", "item_cd": "111", "item_nm": "쌀", "vrty_cd": "01", "vrty_nm": "20kg", "grd_cd": "04", "grd_nm": "상품", "unit": "kg", "unit_sz": "20", "exmn_dd_prc": "63482", "exmn_dd_cnvs_prc": "3174"},
- {"exmn_ymd": "20261125", "se_cd": "01", "se_nm": "소매", "ctgry_cd": "600", "ctgry_nm": "수산물", "item_cd": "611", "item_nm": "고등어", "vrty_cd": "05", "vrty_nm": "국산(신선 냉장)", "grd_cd": "20", "grd_nm": "大", "unit": "마리", "unit_sz": "1", "exmn_dd_prc": "4593", "exmn_dd_cnvs_prc": "4593"},
- {"exmn_ymd": "20220401", "se_cd": "01", "se_nm": "소매", "ctgry_cd": "500", "ctgry_nm": "축산물", "item_cd": "535", "item_nm": "우유", "vrty_cd": "00", "vrty_nm": "우유", "grd_cd": "04", "grd_nm": "상품", "unit": "리터", "unit_sz": "1", "exmn_dd_prc": "2711", "exmn_dd_cnvs_prc": "2711"},
- {"exmn_ymd": "20261125", "se_cd": "02", "se_nm": "중도매", "ctgry_cd": "300", "ctgry_nm": "특용작물", "item_cd": "312", "item_nm": "참깨", "vrty_cd": "03", "vrty_nm": "인도", "grd_cd": "05", "grd_nm": "중품", "unit": "kg", "unit_sz": "30", "exmn_dd_prc": "158250", "exmn_dd_cnvs_prc": "5275"},
- {"exmn_ymd": "20261113", "se_cd": "01", "se_nm": "소매", "ctgry_cd": "200", "ctgry_nm": "채소류", "item_cd": "231", "item_nm": "무", "vrty_cd": "02", "vrty_nm": "고랭지", "grd_cd": "04", "grd_nm": "상품", "unit": "개", "unit_sz": "1", "exmn_dd_prc": "1647", "exmn_dd_cnvs_prc": "1647"}
-]}}}}
+{
+ "response": {
+  "header": {
+   "resultCode": "0",
+   "resultMsg": "정상"
+  },
+  "body": {
+   "dataType": "JSON",
+   "numOfRows": 1000,
+   "pageNo": 1,
+   "totalCount": 7,
+   "items": {
+    "item": [
+     {
+      "exmn_ymd": "20261125",
+      "se_cd": "01",
+      "se_nm": "소매",
+      "ctgry_cd": "200",
+      "ctgry_nm": "채소류",
+      "item_cd": "245",
+      "item_nm": "양파",
+      "vrty_cd": "00",
+      "vrty_nm": "양파",
+      "grd_cd": "04",
+      "grd_nm": "상품",
+      "unit": "kg",
+      "unit_sz": "1",
+      "exmn_dd_prc": "1864",
+      "exmn_dd_cnvs_prc": "1864",
+      "ww1_bfr_prc": "1901",
+      "mm1_bfr_prc": "2050",
+      "yy1_bfr_prc": "2370"
+     },
+     {
+      "exmn_ymd": "20261125",
+      "se_cd": "01",
+      "se_nm": "소매",
+      "ctgry_cd": "200",
+      "ctgry_nm": "채소류",
+      "item_cd": "211",
+      "item_nm": "배추",
+      "vrty_cd": "03",
+      "vrty_nm": "가을",
+      "grd_cd": "04",
+      "grd_nm": "상품",
+      "unit": "포기",
+      "unit_sz": "1",
+      "exmn_dd_prc": "2408",
+      "exmn_dd_cnvs_prc": "2408",
+      "ww1_bfr_prc": "2650",
+      "mm1_bfr_prc": "3420",
+      "yy1_bfr_prc": "3105"
+     },
+     {
+      "exmn_ymd": "20261125",
+      "se_cd": "01",
+      "se_nm": "소매",
+      "ctgry_cd": "100",
+      "ctgry_nm": "식량작물",
+      "item_cd": "111",
+      "item_nm": "쌀",
+      "vrty_cd": "01",
+      "vrty_nm": "20kg",
+      "grd_cd": "04",
+      "grd_nm": "상품",
+      "unit": "kg",
+      "unit_sz": "20",
+      "exmn_dd_prc": "63482",
+      "exmn_dd_cnvs_prc": "3174"
+     },
+     {
+      "exmn_ymd": "20261125",
+      "se_cd": "01",
+      "se_nm": "소매",
+      "ctgry_cd": "600",
+      "ctgry_nm": "수산물",
+      "item_cd": "611",
+      "item_nm": "고등어",
+      "vrty_cd": "05",
+      "vrty_nm": "국산(신선 냉장)",
+      "grd_cd": "20",
+      "grd_nm": "大",
+      "unit": "마리",
+      "unit_sz": "1",
+      "exmn_dd_prc": "4593",
+      "exmn_dd_cnvs_prc": "4593"
+     },
+     {
+      "exmn_ymd": "20220401",
+      "se_cd": "01",
+      "se_nm": "소매",
+      "ctgry_cd": "500",
+      "ctgry_nm": "축산물",
+      "item_cd": "535",
+      "item_nm": "우유",
+      "vrty_cd": "00",
+      "vrty_nm": "우유",
+      "grd_cd": "04",
+      "grd_nm": "상품",
+      "unit": "리터",
+      "unit_sz": "1",
+      "exmn_dd_prc": "2711",
+      "exmn_dd_cnvs_prc": "2711"
+     },
+     {
+      "exmn_ymd": "20261125",
+      "se_cd": "02",
+      "se_nm": "중도매",
+      "ctgry_cd": "300",
+      "ctgry_nm": "특용작물",
+      "item_cd": "312",
+      "item_nm": "참깨",
+      "vrty_cd": "03",
+      "vrty_nm": "인도",
+      "grd_cd": "05",
+      "grd_nm": "중품",
+      "unit": "kg",
+      "unit_sz": "30",
+      "exmn_dd_prc": "158250",
+      "exmn_dd_cnvs_prc": "5275"
+     },
+     {
+      "exmn_ymd": "20261113",
+      "se_cd": "01",
+      "se_nm": "소매",
+      "ctgry_cd": "200",
+      "ctgry_nm": "채소류",
+      "item_cd": "231",
+      "item_nm": "무",
+      "vrty_cd": "02",
+      "vrty_nm": "고랭지",
+      "grd_cd": "04",
+      "grd_nm": "상품",
+      "unit": "개",
+      "unit_sz": "1",
+      "exmn_dd_prc": "1647",
+      "exmn_dd_cnvs_prc": "1647"
+     }
+    ]
+   }
+  }
+ }
+}

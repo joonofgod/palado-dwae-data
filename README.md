@@ -4,6 +4,7 @@
 앱 코드는 비공개 저장소에 있고, 이 저장소에는 공공데이터만 있어요.
 
 - 매주 화요일 오전 10시(한국 시간)에 `.github/workflows/prices.yml`이 `tool/fetch_prices.py`를 실행해 `prices.json`을 갱신해요. Actions 탭에서 Run workflow로 바로 실행할 수도 있어요.
+- 품목마다 `history`(최근 약 3개월의 [날짜, 가격])와, KAMIS는 `w1`·`m1`·`y1`(1주·1달·1년 전 가격)도 들어 있어요.
 - 앱은 `https://raw.githubusercontent.com/joonofgod/palado-dwae-data/main/prices.json`을 받아요.
 
 | 출처 | 무엇 |

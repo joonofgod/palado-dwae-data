@@ -131,6 +131,11 @@ def kamis_convert(rows):
             "source": "KAMIS",
             "date": day.isoformat(),
         }
+        # 1주·1달·1년 전 같은 단위 가격 (변동 표시용, 없으면 생략).
+        for field, short in (("ww1_bfr_prc", "w1"), ("mm1_bfr_prc", "m1"), ("yy1_bfr_prc", "y1")):
+            before = number(r.get(field))
+            if before:
+                entry[short] = before
         key = (name, kind)
         old = best.get(key)
         if (
@@ -319,6 +324,37 @@ def fetch_chamgagyeok(today, fixture):
         return None
 
 
+# ---------------------------------------------------------------- 변동 이력
+
+HISTORY_DAYS = 100  # 그래프는 최근 3개월을 보여 주므로 조금 넉넉히 둡니다.
+
+
+def item_key(i):
+    return (i.get("source", "KAMIS"), i["name"], i.get("kind", ""), i.get("unit", ""))
+
+
+def add_history(items, old_items):
+    """지난번 파일의 이력에 이번 가격을 붙입니다. [[날짜, 가격], ...] 오래된 것부터."""
+    old = {item_key(i): i.get("history") or [] for i in old_items}
+    for i in items:
+        date = i.get("date")
+        hist = [list(h) for h in old.get(item_key(i), []) if isinstance(h, list) and len(h) == 2]
+        if not hist and date:
+            # 처음 받는 품목은 KAMIS가 주는 1달·1주 전 가격으로 시작점을 채웁니다.
+            day = dt.date.fromisoformat(date)
+            for back, field in ((30, "m1"), (7, "w1")):
+                if i.get(field):
+                    hist.append([(day - dt.timedelta(days=back)).isoformat(), i[field]])
+        if date and i.get("price"):
+            hist = [h for h in hist if h[0] != date] + [[date, i["price"]]]
+        hist.sort(key=lambda h: h[0])
+        if date:
+            cutoff = (dt.date.fromisoformat(date) - dt.timedelta(days=HISTORY_DAYS)).isoformat()
+            hist = [h for h in hist if h[0] >= cutoff]
+        if hist:
+            i["history"] = hist
+
+
 # ---------------------------------------------------------------- 저장
 
 
@@ -348,6 +384,7 @@ def main():
         print("새로 받은 시세가 없어 파일을 바꾸지 않습니다.")
         return 0
 
+    add_history(items, old_items)
     items.sort(key=lambda i: (i.get("source", ""), i.get("category", ""), i["name"], i.get("kind", "")))
     dates = sorted({i["date"] for i in items if i.get("date")})
     out = {
